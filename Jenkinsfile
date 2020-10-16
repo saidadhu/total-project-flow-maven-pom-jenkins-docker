@@ -17,38 +17,36 @@ node
   {
    git branch: 'development', credentialsId: '65fb834f-a83b-4fe7-8e11-686245c47a65', url: 'https://github.com/MithunTechnologiesDevOps/maven-web-application.git'
  }
- 
- stage("Build")
- {
- sh "${mavenHome}/bin/mvn clean package"
- }
- 
-  /*
- stage("ExecuteSonarQubeReport")
- {
- sh "${mavenHome}/bin/mvn sonar:sonar"
- }
- 
- stage("UploadArtifactsintoNexus")
- {
- sh "${mavenHome}/bin/mvn deploy"
- }
- 
-  stage("DeployAppTomcat")
- {
-  sshagent(['423b5b58-c0a3-42aa-af6e-f0affe1bad0c']) {
-    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war  ec2-user@15.206.91.239:/opt/apache-tomcat-9.0.34/webapps/" 
-  }
- }
- 
- stage('EmailNotification')
- {
- mail bcc: 'devopstrainingblr@gmail.com', body: '''Build is over
+ node
+{
 
- Thanks,
- Mithun Technologies,
- 9980923226.''', cc: 'devopstrainingblr@gmail.com', from: '', replyTo: '', subject: 'Build is over!!', to: 'devopstrainingblr@gmail.com'
- }
- */
- 
- }
+def mavenhome = tool name : "maven-3.6.3"
+properties([pipelineTriggers([pollSCM('* * * * *')])])
+
+stage('checkout')
+{
+git branch: 'development', credentialsId: '90b0f2b9-015f-4c51-88c9-614a5c55490b', url: 'https://github.com/rahulbasha/maven-o-development.git'
+}
+stage('build')
+{
+sh"${mavenhome}/bin/mvn clean package"
+}
+stage('sonarqube report')
+{
+sh"${mavenhome}/bin/mvn sonar:sonar"
+}
+stage('tomcat')
+{
+sshagent(['04638fb0-2874-4771-bcbe-4fa755824044']) {
+    sh "scp -o StrictHostKeychecking=no /var/lib/jenkins/workspace/maven-pipe/target/maven-web-application.war ec2-user@13.233.204.242://opt/apache-tomcat-8.5.57/webapps"
+}
+}
+stage('email sent')
+{
+emailext body: '''build completed sucessfully!!
+
+Thanks & regards,
+Rahul basha shaik,
+8074346494.''', subject: 'build succesfull!!!', to: 'rahulraees010@gmail.com'
+}
+}
